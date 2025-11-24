@@ -1,5 +1,5 @@
 from typing import List
-from repository.IPerguntaRepository import IPerguntaRepository
+from questions.repository.IPerguntaRepository import IPerguntaRepository
 from models.Entities.Pergunta import Pergunta
 from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
 from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel

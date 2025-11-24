@@ -3,8 +3,8 @@ from typing import List, Callable
 from fastapi import APIRouter, Depends, status, HTTPException
 from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
 from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel
-from repository.IPerguntaRepository import IPerguntaRepository 
-from service.IPerguntaService import IPerguntaService 
+from questions.repository.IPerguntaRepository import IPerguntaRepository
+from questions.service.IPerguntaService import IPerguntaService 
 
 
 # ----------------------------------------------------
