@@ -8,7 +8,7 @@
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/shoot.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#33CA7F"
     },
     "ios": {
@@ -26,6 +26,11 @@
     },
     "web": {
       "favicon": "./assets/app/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c870fdbe-b005-4faa-bb43-1c46137c9ede"
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -6,22 +6,40 @@ import {
   StyleSheet, 
   SafeAreaView, 
   TouchableOpacity, 
-  TextInput 
+  TextInput,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../../navigation/types';
-import logoSoccerQuiz from '../../../../assets/images/SOCCER QUIZ.png'; 
+import { useAuth } from '../../../contexts/AuthContext';
+import logoSoccerQuiz from '../../../../assets/images/SOCCER QUIZ.png';
+import eyeIcon from '../../../../assets/icons/eye.png';
+import eyeOffIcon from '../../../../assets/icons/eye-off.png';
 
 type LoginScreenProps = StackScreenProps<AuthStackParamList, 'LoginScreen'>;
-
-const GREEN_COLOR = '#00C853';
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    console.log('Login com:', email, password);
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Atenção', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await login({ email: email.trim().toLowerCase(), password });
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -37,20 +55,45 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           value={email} 
           onChangeText={setEmail} 
           placeholderTextColor="#B3B3B3"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
         
         <Text style={styles.label}>Senha</Text>
-        <TextInput 
-          style={styles.input}
-          placeholder="Digite sua senha" 
-          secureTextEntry
-          value={password} 
-          onChangeText={setPassword} 
-          placeholderTextColor="#B3B3B3"
-        />
+        <View style={styles.inputContainer}>
+          <TextInput 
+            ref={passwordRef}
+            style={styles.input}
+            placeholder="Digite sua senha" 
+            secureTextEntry={!showPassword}
+            value={password} 
+            onChangeText={setPassword} 
+            placeholderTextColor="#B3B3B3"
+            returnKeyType="done"
+            onSubmitEditing={handleLogin}
+          />
+          <TouchableOpacity 
+            style={styles.eyeIcon}
+            onPress={() => setShowPassword(!showPassword)}
+            activeOpacity={0.7}
+          >
+            <Image 
+              source={showPassword ? eyeOffIcon : eyeIcon} 
+              style={styles.eyeIconImage} 
+            />
+          </TouchableOpacity>
+        </View>
         
-        <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleLogin}>
-          <Text style={styles.primaryButtonText}>Login</Text>
+        <TouchableOpacity 
+          style={[styles.button, styles.primaryButton, isLoading && styles.buttonDisabled]} 
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.primaryButtonText}>Login</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -96,14 +139,33 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   
+  inputContainer: {
+    position: 'relative',
+    width: '100%',
+    marginBottom: 8,
+  },
   input: {
     width: '100%',
     backgroundColor: 'white',
     padding: 15,
+    paddingRight: 45,
     borderRadius: 5,
     borderWidth: 1,
     borderColor: '#ddd',
-    marginBottom: 8,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+  },
+  eyeIconImage: {
+    width: 20,
+    height: 20,
+    tintColor: '#1D8B54',
   },
 
   button: {
@@ -137,6 +199,9 @@ const styles = StyleSheet.create({
   linkText: {
     color: 'black',
     textDecorationLine: 'underline',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 

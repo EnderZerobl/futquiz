@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,12 +7,20 @@ import {
   SafeAreaView, 
   ScrollView, 
   TextInput, 
-  TouchableOpacity 
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../../navigation/types';
+import { useAuth } from '../../../contexts/AuthContext';
 import logoSoccerQuiz from '../../../../assets/images/SOCCER QUIZ.png';
 import warningIcon from '../../../../assets/icons/warning.png';
+import eyeIcon from '../../../../assets/icons/eye.png';
+import eyeOffIcon from '../../../../assets/icons/eye-off.png';
 
 interface RegisterFormState {
   nome: string;
@@ -26,64 +34,501 @@ interface RegisterFormState {
 
 type RegisterScreenProps = StackScreenProps<AuthStackParamList, 'RegisterScreen'>;
 
-const GREEN_COLOR = '#00C853';
-
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
+  const { register } = useAuth();
   const [form, setForm] = useState<RegisterFormState>({
     nome: '', sobrenome: '', cpf: '', dataNascimento: '',
     email: '', senha: '', confirmarSenha: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [dataError, setDataError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    minLength: false,
+    hasNumber: false,
+    hasSymbol: false,
+  });
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isSwitchingPasswordFields = useRef<boolean>(false);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sobrenomeRef = useRef<TextInput>(null);
+  const cpfRef = useRef<TextInput>(null);
+  const dataRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const senhaRef = useRef<TextInput>(null);
+  const confirmarSenhaRef = useRef<TextInput>(null);
 
   const handleChange = (name: keyof RegisterFormState, value: string): void => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleRegister = () => {
-    if (form.senha !== form.confirmarSenha) {
-        console.error("As senhas não coincidem!");
-        return;
+  const validatePasswordRequirements = (senha: string): void => {
+    setPasswordRequirements({
+      minLength: senha.length >= 8,
+      hasNumber: /\d/.test(senha),
+      hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(senha),
+    });
+  };
+
+  const isPasswordValid = (): boolean => {
+    return passwordRequirements.minLength && 
+           passwordRequirements.hasNumber && 
+           passwordRequirements.hasSymbol;
+  };
+
+  const validatePasswords = (senha: string, confirmarSenha: string): void => {
+    if (senha && confirmarSenha) {
+      setPasswordError(senha !== confirmarSenha);
+    } else {
+      setPasswordError(false);
     }
-    console.log('Cadastro realizado com:', form);
+  };
+
+  const handleSenhaChange = (value: string): void => {
+    handleChange('senha', value);
+    validatePasswordRequirements(value);
+    validatePasswords(value, form.confirmarSenha);
+  };
+
+  const handleConfirmarSenhaChange = (value: string): void => {
+    handleChange('confirmarSenha', value);
+    validatePasswords(form.senha, value);
+  };
+
+  const formatCPF = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    const limited = numbers.slice(0, 11);
+    
+    if (limited.length <= 3) {
+      return limited;
+    } else if (limited.length <= 6) {
+      return `${limited.slice(0, 3)}.${limited.slice(3)}`;
+    } else if (limited.length <= 9) {
+      return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6)}`;
+    } else {
+      return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6, 9)}-${limited.slice(9)}`;
+    }
+  };
+
+  const handleCPFChange = (value: string): void => {
+    const formatted = formatCPF(value);
+    handleChange('cpf', formatted);
+  };
+
+  const formatDate = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    const limited = numbers.slice(0, 8);
+    
+    if (limited.length <= 2) {
+      return limited;
+    } else if (limited.length <= 4) {
+      return `${limited.slice(0, 2)}/${limited.slice(2)}`;
+    } else {
+      return `${limited.slice(0, 2)}/${limited.slice(2, 4)}/${limited.slice(4)}`;
+    }
+  };
+
+  const validateAge = (dateString: string): boolean => {
+    if (dateString.length !== 10) return false;
+    
+    const [day, month, year] = dateString.split('/').map(Number);
+    
+    if (!day || !month || !year || month > 12 || day > 31) return false;
+    
+    const birthDate = new Date(year, month - 1, day);
+    const today = new Date();
+    
+    if (birthDate.getFullYear() !== year || 
+        birthDate.getMonth() !== month - 1 || 
+        birthDate.getDate() !== day) {
+      return false;
+    }
+    
+    let age = today.getFullYear() - year;
+    const monthDiff = today.getMonth() - (month - 1);
+    const dayDiff = today.getDate() - day;
+    
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+    
+    return age >= 16;
+  };
+
+  const handleDateChange = (value: string): void => {
+    const formatted = formatDate(value);
+    handleChange('dataNascimento', formatted);
+    
+    if (formatted.length === 10) {
+      const isValid = validateAge(formatted);
+      setDataError(!isValid);
+    } else {
+      setDataError(false);
+    }
+  };
+
+  const handleDateSubmit = (): void => {
+    if (dataError || form.dataNascimento.length !== 10 || !validateAge(form.dataNascimento)) {
+      return;
+    }
+    emailRef.current?.focus();
+  };
+
+  const handleSenhaSubmit = (): void => {
+    if (!isPasswordValid()) {
+      return;
+    }
+    confirmarSenhaRef.current?.focus();
+  };
+
+  const centerScroll = (): void => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }, 100);
+  };
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => {
+        setIsKeyboardVisible(true);
+        if (isPasswordFocused) {
+          setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+          }, 100);
+        }
+      }
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+        centerScroll();
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, [isPasswordFocused]);
+
+  const handleSenhaFocus = (): void => {
+    isSwitchingPasswordFields.current = true;
+    setIsPasswordFocused(true);
+    setTimeout(() => {
+      isSwitchingPasswordFields.current = false;
+    }, 200);
+    setTimeout(() => {
+      if (isKeyboardVisible) {
+        scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+      } else {
+        setTimeout(() => {
+          if (isKeyboardVisible) {
+            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+          }
+        }, 200);
+      }
+    }, 100);
+  };
+
+  const handleConfirmarSenhaFocus = (): void => {
+    isSwitchingPasswordFields.current = true;
+    setIsPasswordFocused(true);
+    setTimeout(() => {
+      isSwitchingPasswordFields.current = false;
+    }, 200);
+    setTimeout(() => {
+      if (isKeyboardVisible) {
+        scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+      } else {
+        setTimeout(() => {
+          if (isKeyboardVisible) {
+            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+          }
+        }, 200);
+      }
+    }, 100);
+  };
+
+  const handlePasswordBlur = (): void => {
+    setIsPasswordFocused(false);
+    setTimeout(() => {
+      if (!isSwitchingPasswordFields.current && isKeyboardVisible) {
+        centerScroll();
+      }
+    }, 150);
+  };
+
+  const handleOtherFieldFocus = (): void => {
+    setIsPasswordFocused(false);
+    centerScroll();
+  };
+
+  const handleScroll = (event: any): void => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    
+    if (!isPasswordFocused && currentY > 100) {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (!isPasswordFocused) {
+          centerScroll();
+        }
+      }, 500);
+    }
+  };
+
+  const convertDateToISO = (dateString: string): string => {
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
+  const removeCPFFormatting = (cpf: string): string => {
+    return cpf.replace(/[.-]/g, '');
+  };
+
+  const handleRegister = async () => {
+    if (!form.nome.trim() || !form.sobrenome.trim() || !form.cpf.trim() || 
+        !form.dataNascimento.trim() || !form.email.trim() || !form.senha.trim()) {
+      Alert.alert('Atenção', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (form.senha !== form.confirmarSenha) {
+      Alert.alert('Erro', 'As senhas não coincidem!');
+      return;
+    }
+
+    if (form.senha.length < 8) {
+      Alert.alert('Erro', 'A senha deve ter no mínimo 8 caracteres');
+      return;
+    }
+
+    if (dataError || !validateAge(form.dataNascimento)) {
+      Alert.alert('Erro', 'Data de nascimento inválida ou você deve ter pelo menos 16 anos');
+      return;
+    }
+
+    if (!isPasswordValid()) {
+      Alert.alert('Erro', 'A senha não atende aos requisitos mínimos');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const registerData = {
+        email: form.email.trim().toLowerCase(),
+        password: form.senha,
+        name: form.nome.trim(),
+        last_name: form.sobrenome.trim(),
+        cpf: removeCPFFormatting(form.cpf),
+        birth_date: convertDateToISO(form.dataNascimento),
+      };
+
+      await register(registerData);
+      
+      Alert.alert(
+        'Cadastro Efetuado com Sucesso',
+        'Seu cadastro foi realizado com sucesso!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('LoginScreen');
+            },
+          },
+        ]
+      );
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          scrollEnabled={false}
+        >
         <View style={styles.header}>
           <Image source={logoSoccerQuiz} style={styles.logo} resizeMode="contain" />
         </View>
         
-        <TextInput style={styles.input} placeholder="Nome" value={form.nome} onChangeText={(t) => handleChange('nome', t)} placeholderTextColor="white" />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Nome" 
+          value={form.nome} 
+          onChangeText={(t) => handleChange('nome', t)} 
+          placeholderTextColor="white"
+          returnKeyType="next"
+          onSubmitEditing={() => sobrenomeRef.current?.focus()}
+          onFocus={handleOtherFieldFocus}
+        />
         
-        <TextInput style={styles.input} placeholder="Sobrenome" value={form.sobrenome} onChangeText={(t) => handleChange('sobrenome', t)} placeholderTextColor="white" />
+        <TextInput 
+          ref={sobrenomeRef}
+          style={styles.input} 
+          placeholder="Sobrenome" 
+          value={form.sobrenome} 
+          onChangeText={(t) => handleChange('sobrenome', t)} 
+          placeholderTextColor="white"
+          returnKeyType="next"
+          onSubmitEditing={() => cpfRef.current?.focus()}
+          onFocus={handleOtherFieldFocus}
+        />
         
-        <TextInput style={styles.input} placeholder="CPF" keyboardType="numeric" value={form.cpf} onChangeText={(t) => handleChange('cpf', t)} placeholderTextColor="white" />
+        <TextInput 
+          ref={cpfRef}
+          style={styles.input} 
+          placeholder="CPF" 
+          keyboardType="numeric" 
+          value={form.cpf} 
+          onChangeText={handleCPFChange} 
+          placeholderTextColor="white"
+          returnKeyType="next"
+          onSubmitEditing={() => dataRef.current?.focus()}
+          maxLength={14}
+          onFocus={handleOtherFieldFocus}
+        />
         
-        <TextInput style={styles.input} placeholder="DD/MM/AAAA" keyboardType="numeric" value={form.dataNascimento} onChangeText={(t) => handleChange('dataNascimento', t)} placeholderTextColor="white" />
+        <TextInput 
+          ref={dataRef}
+          style={[styles.input, dataError && styles.inputError]} 
+          placeholder="DD/MM/AAAA" 
+          keyboardType="numeric" 
+          value={form.dataNascimento} 
+          onChangeText={handleDateChange} 
+          placeholderTextColor="white"
+          returnKeyType="next"
+          onSubmitEditing={handleDateSubmit}
+          maxLength={10}
+          onFocus={handleOtherFieldFocus}
+        />
         <View style={styles.hintContainer}>
           <Image source={warningIcon} style={styles.warningIcon} />
           <Text style={styles.hint}>Você precisa ser maior de 18 anos para usar o app.</Text>
         </View>
 
-        <TextInput style={styles.input} placeholder="E-mail" keyboardType="email-address" value={form.email} onChangeText={(t) => handleChange('email', t)} placeholderTextColor="white" />
+        <TextInput 
+          ref={emailRef}
+          style={styles.input} 
+          placeholder="E-mail" 
+          keyboardType="email-address" 
+          value={form.email} 
+          onChangeText={(t) => handleChange('email', t)} 
+          placeholderTextColor="white"
+          returnKeyType="next"
+          onSubmitEditing={() => senhaRef.current?.focus()}
+          onFocus={handleOtherFieldFocus}
+        />
 
-        <TextInput style={styles.input} placeholder="Senha" secureTextEntry value={form.senha} onChangeText={(t) => handleChange('senha', t)} placeholderTextColor="white" />
-
-        <TextInput style={styles.input} placeholder="Confirme a Senha" secureTextEntry value={form.confirmarSenha} onChangeText={(t) => handleChange('confirmarSenha', t)} placeholderTextColor="white" />
-        <View style={styles.hintContainer}>
-          <Image source={warningIcon} style={styles.warningIcon} />
-          <View style={styles.hintTextContainer}>
-            <Text style={styles.hint}>A senha precisa ter:</Text>
-            <Text style={styles.hintListItem}>• No mínimo 6 caracteres</Text>
-            <Text style={styles.hintListItem}>• Um número</Text>
-            <Text style={styles.hintListItem}>• Um símbolo</Text>
-          </View>
+        <View style={styles.inputContainer}>
+          <TextInput 
+            ref={senhaRef}
+            style={[styles.input, !isPasswordValid() && form.senha.length > 0 && styles.inputError]} 
+            placeholder="Senha" 
+            secureTextEntry={!showPassword}
+            value={form.senha} 
+            onChangeText={handleSenhaChange} 
+            placeholderTextColor="white"
+            returnKeyType="next"
+            onSubmitEditing={handleSenhaSubmit}
+            onFocus={handleSenhaFocus}
+            onBlur={handlePasswordBlur}
+          />
+          <TouchableOpacity 
+            style={styles.eyeIcon}
+            onPress={() => setShowPassword(!showPassword)}
+            activeOpacity={0.7}
+          >
+            <Image 
+              source={showPassword ? eyeOffIcon : eyeIcon} 
+              style={styles.eyeIconImage} 
+            />
+          </TouchableOpacity>
         </View>
+
+        <TextInput 
+          ref={confirmarSenhaRef}
+          style={[styles.input, passwordError && styles.inputError]} 
+          placeholder="Confirme a Senha" 
+          secureTextEntry={!showPassword}
+          value={form.confirmarSenha} 
+          onChangeText={handleConfirmarSenhaChange} 
+          placeholderTextColor="white"
+          returnKeyType="done"
+          onSubmitEditing={handleRegister}
+          onFocus={handleConfirmarSenhaFocus}
+          onBlur={handlePasswordBlur}
+        />
+        {passwordError ? (
+          <View style={styles.hintContainer}>
+            <Image source={warningIcon} style={styles.warningIcon} />
+            <Text style={[styles.hint, styles.errorText]}>As senhas não coincidem.</Text>
+          </View>
+        ) : (
+          <View style={styles.hintContainer}>
+            <Image source={warningIcon} style={styles.warningIcon} />
+            <View style={styles.hintTextContainer}>
+              <Text style={styles.hint}>A senha precisa ter:</Text>
+              <Text style={[
+                styles.hintListItem, 
+                form.senha.length > 0 && !passwordRequirements.minLength && styles.errorText
+              ]}>
+                • No mínimo 8 caracteres
+              </Text>
+              <Text style={[
+                styles.hintListItem, 
+                form.senha.length > 0 && !passwordRequirements.hasNumber && styles.errorText
+              ]}>
+                • Um número
+              </Text>
+              <Text style={[
+                styles.hintListItem, 
+                form.senha.length > 0 && !passwordRequirements.hasSymbol && styles.errorText
+              ]}>
+                • Um símbolo
+              </Text>
+            </View>
+          </View>
+        )}
         
-        <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleRegister}>
-          <Text style={styles.primaryButtonText}>Finalizar o Cadastro</Text>
+        <TouchableOpacity 
+          style={[styles.button, styles.primaryButton, isLoading && styles.buttonDisabled]} 
+          onPress={handleRegister}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.primaryButtonText}>Finalizar o Cadastro</Text>
+          )}
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -93,11 +538,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#33CA7F', 
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
     padding: 30,
     justifyContent: 'center',
     paddingVertical: 50,
+    paddingBottom: 150,
   },
   header: {
     alignItems: 'center',
@@ -108,11 +557,16 @@ const styles = StyleSheet.create({
     height: 100,
   },
   
+  inputContainer: {
+    position: 'relative',
+    width: '100%',
+  },
   input: {
     width: '100%',
     backgroundColor: 'transparent',
     padding: 15,
     paddingBottom: 10,
+    paddingRight: 45,
     borderRadius: 0,
     borderWidth: 0,
     borderBottomWidth: 2,
@@ -120,6 +574,20 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     color: 'white',
     fontSize: 16,
+  },
+  inputError: {
+    borderBottomColor: '#FF5252',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 10,
+    bottom: 15,
+    padding: 5,
+  },
+  eyeIconImage: {
+    width: 20,
+    height: 20,
+    tintColor: 'white',
   },
 
   button: {
@@ -136,13 +604,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-
-  label: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 10,
+  buttonDisabled: {
+    opacity: 0.6,
   },
+
   hintContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -166,6 +631,9 @@ const styles = StyleSheet.create({
     color: '#E0E0E0', 
     fontSize: 12,
     marginLeft: 4,
+  },
+  errorText: {
+    color: '#FF5252',
   },
 });
 

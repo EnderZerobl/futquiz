@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from questions.router.PerguntaRouter import router as pergunta_router
 from questions.interfaces.IPerguntaRepository import IPerguntaRepository
 from questions.repository.PerguntaRepository import PerguntaRepository
@@ -36,6 +37,16 @@ app = FastAPI(
     title="Soccer Quiz API (30% MVP)",
     version="1.0.0",
 )
+
+# Configurar CORS para permitir requisições do app mobile
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Em produção, especifique os domínios permitidos
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos os métodos (GET, POST, PUT, DELETE, etc)
+    allow_headers=["*"],  # Permite todos os headers
+)
+
 app.dependency_overrides[IPerguntaService] = get_pergunta_service
 app.dependency_overrides[IAuthServ] = get_auth_service
 app.add_event_handler("startup", setup_database)

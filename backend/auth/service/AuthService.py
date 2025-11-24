@@ -12,9 +12,9 @@ class AuthService(IAuthService):
         self.repository = repository
 
     def register_user(self, user_input: UserInput) -> UserView:
-        age_limit = date.today() - timedelta(days=16*365.25)
+        age_limit = date.today() - timedelta(days=18*365.25)
         if user_input.birth_date > age_limit:
-             raise ValueError("Você deve ter no mínimo 16 anos para se cadastrar.")
+             raise ValueError("Você deve ter no mínimo 18 anos para se cadastrar.")
              
         if len(user_input.password.encode('utf-8')) > 72:
             raise ValueError("A senha não pode exceder 72 caracteres.")
