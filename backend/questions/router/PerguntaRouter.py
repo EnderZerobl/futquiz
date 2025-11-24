@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, APIRouter, Depends, status, HTTPException
 from typing import List, Callable
-from fastapi import APIRouter, Depends, status, HTTPException
-from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
-from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel
+from questions.schemas.PerguntaInputModel import PerguntaInputModel 
+from questions.schemas.PerguntaViewModel import PerguntaViewModel
 from repository.IPerguntaRepository import IPerguntaRepository 
 from service.IPerguntaService import IPerguntaService 
 

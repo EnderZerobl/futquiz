@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
-from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
-from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel
+from questions.schemas.PerguntaInputModel import PerguntaInputModel 
+from questions.schemas.PerguntaViewModel import PerguntaViewModel
 
 class IPerguntaRepository(ABC):
     
