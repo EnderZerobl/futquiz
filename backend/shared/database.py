@@ -1,6 +1,5 @@
-from sqlalchemy import create_engine
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, Date
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./futquiz.db"
 
@@ -16,11 +15,16 @@ class UserTable(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    
     email = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String)
+    last_name = Column(String)
+    cpf = Column(String, unique=True, nullable=False)
+    birth_date = Column(Date, nullable=False)
     
     password_hash = Column(String, nullable=False)
-    name = Column(String)
+
+def create_db_and_tables(engine):
+    Base.metadata.create_all(bind=engine) 
 
 def get_db():
     db = SessionLocal()

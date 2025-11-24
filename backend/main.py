@@ -9,6 +9,9 @@ from auth.interfaces.IAuthRepository import IAuthRepository as IAuthRepo
 from auth.repository.AuthRepository import AuthRepository
 from auth.interfaces.IAuthService import IAuthService as IAuthServ
 from auth.service.AuthService import AuthService
+from shared.database import get_db
+from sqlalchemy.orm import Session
+from shared.database import create_db_and_tables, engine
 
 def get_pergunta_repository() -> IPerguntaRepository:
     return PerguntaRepository()
@@ -18,13 +21,16 @@ def get_pergunta_service(
 ) -> IPerguntaService:
     return PerguntaService(repository = repository)
 
-def get_auth_repository() -> IAuthRepo:
-    return AuthRepository()
+def get_auth_repository(db_session: Session = Depends(get_db)) -> IAuthRepo:
+    return AuthRepository(session=db_session)
 
 def get_auth_service(
     repository: IAuthRepo = Depends(get_auth_repository)
 ) -> IAuthServ:
     return AuthService(repository = repository)
+
+def setup_database():
+    create_db_and_tables(engine)
 
 app = FastAPI(
     title="Soccer Quiz API (30% MVP)",
@@ -32,5 +38,6 @@ app = FastAPI(
 )
 app.dependency_overrides[IPerguntaService] = get_pergunta_service
 app.dependency_overrides[IAuthServ] = get_auth_service
+app.add_event_handler("startup", setup_database)
 app.include_router(pergunta_router)
 app.include_router(auth_router)

@@ -7,6 +7,7 @@ router = APIRouter(
     prefix="/auth",
     tags=["Autenticação"],
 )
+
 @router.post(
     "/register",
     response_model=UserView, 
@@ -15,26 +16,30 @@ router = APIRouter(
 )
 async def register(
     user_data: UserInput,  
-    service: IAuthService = Depends() 
+    service: IAuthService = Depends()
 ):
     try:
-        new_user = await service.register_user(user_data)
+        new_user = service.register_user(user_data)
         return new_user
     except HTTPException as e:
         raise e
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Erro interno de processamento.")
+    
 @router.post(
     "/login",
     status_code=status.HTTP_200_OK,
     summary="Autentica o usuário e retorna o token JWT"
 )
 async def login(
-    credentials: Dict, 
-    service: IAuthService = Depends() 
+    credentials: Dict,
+    service: IAuthService = Depends()
 ):
     try:
-        token = await service.authenticate_user(credentials)
+        token = service.authenticate_user(credentials)
         return {"access_token": token, "token_type": "bearer"}
     except HTTPException as e:
         raise e
+  
