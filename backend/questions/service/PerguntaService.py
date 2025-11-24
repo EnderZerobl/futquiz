@@ -1,8 +1,8 @@
 from typing import List
-from service.IPerguntaService import IPerguntaService
-from repository.IPerguntaRepository import IPerguntaRepository
-from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
-from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel
+from questions.interfaces.IPerguntaService import IPerguntaService
+from questions.interfaces.IPerguntaRepository import IPerguntaRepository
+from questions.schemas.PerguntaInputModel import PerguntaInputModel 
+from questions.schemas.PerguntaViewModel import PerguntaViewModel
 
 class PerguntaService(IPerguntaService):
     

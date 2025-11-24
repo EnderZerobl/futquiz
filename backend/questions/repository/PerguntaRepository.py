@@ -1,8 +1,8 @@
 from typing import List
-from questions.repository.IPerguntaRepository import IPerguntaRepository
-from models.Entities.Pergunta import Pergunta
-from models.DTOs.Inputs.PerguntaInputModel import PerguntaInputModel 
-from models.DTOs.Views.PerguntaViewModel import PerguntaViewModel
+from questions.interfaces.IPerguntaRepository import IPerguntaRepository
+from questions.schemas.Pergunta import Pergunta
+from questions.schemas.PerguntaInputModel import PerguntaInputModel 
+from questions.schemas.PerguntaViewModel import PerguntaViewModel
 import uuid # Usaremos para simular IDs sequenciais
 
 # Simulação de um 'Banco de Dados' em memória

@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends
 from questions.router.PerguntaRouter import router as pergunta_router
-from questions.repository.IPerguntaRepository import IPerguntaRepository
+from questions.interfaces.IPerguntaRepository import IPerguntaRepository
 from questions.repository.PerguntaRepository import PerguntaRepository
-from questions.service.IPerguntaService import IPerguntaService
+from questions.interfaces.IPerguntaService import IPerguntaService
 from questions.service.PerguntaService import PerguntaService
 from auth.router.AuthRouter import router as auth_router
 from auth.interfaces.IAuthRepository import IAuthRepository as IAuthRepo
