@@ -1,5 +1,5 @@
 from typing import List
-from questions.repository.IPerguntaRepository import IPerguntaRepository
+from questions.interfaces.IPerguntaRepository import IPerguntaRepository
 from questions.schemas.Pergunta import Pergunta
 from questions.schemas.PerguntaInputModel import PerguntaInputModel 
 from questions.schemas.PerguntaViewModel import PerguntaViewModel
