@@ -11,7 +11,7 @@ from auth.interfaces.IAuthRepository import IAuthRepository as IAuthRepo
 from auth.repository.AuthRepository import AuthRepository
 from auth.interfaces.IAuthService import IAuthService as IAuthServ
 from auth.service.AuthService import AuthService
-from auth.router.UserRouter import router as user_router # Importado
+from auth.router.UserRouter import router as user_router 
 from auth.interfaces.IUserRepository import IUserRepository
 from auth.repository.UserRepository import UserRepository
 from auth.interfaces.IUserService import IUserService
@@ -41,8 +41,6 @@ def get_pergunta_service(
     repository: IPerguntaRepository = Depends(get_pergunta_repository)
 ) -> IPerguntaService:
     return PerguntaService(repository = repository)
-
-# --- APLICAÇÃO ---
 
 create_db_and_tables(engine)
 
