@@ -157,7 +157,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       age--;
     }
     
-    return age >= 16;
+    return age >= 18;
   };
 
   const handleDateChange = (value: string): void => {
@@ -200,11 +200,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       () => {
         setIsKeyboardVisible(true);
-        if (isPasswordFocused) {
-          setTimeout(() => {
-            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-          }, 100);
-        }
+        // Não faz scroll automático aqui - apenas quando os campos de senha recebem foco
       }
     );
 
@@ -212,7 +208,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
         setIsKeyboardVisible(false);
-        centerScroll();
+        // Só volta para o centro se não estiver nos campos de senha
+        if (!isPasswordFocused) {
+          centerScroll();
+        }
       }
     );
 
@@ -228,17 +227,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     setTimeout(() => {
       isSwitchingPasswordFields.current = false;
     }, 200);
+    // Scroll para o final quando o campo de senha recebe foco
     setTimeout(() => {
-      if (isKeyboardVisible) {
-        scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-      } else {
-        setTimeout(() => {
-          if (isKeyboardVisible) {
-            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-          }
-        }, 200);
-      }
-    }, 100);
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 300);
   };
 
   const handleConfirmarSenhaFocus = (): void => {
@@ -247,23 +239,17 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     setTimeout(() => {
       isSwitchingPasswordFields.current = false;
     }, 200);
+    // Scroll para o final quando o campo de confirmar senha recebe foco
     setTimeout(() => {
-      if (isKeyboardVisible) {
-        scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-      } else {
-        setTimeout(() => {
-          if (isKeyboardVisible) {
-            scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-          }
-        }, 200);
-      }
-    }, 100);
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 300);
   };
 
   const handlePasswordBlur = (): void => {
     setIsPasswordFocused(false);
     setTimeout(() => {
-      if (!isSwitchingPasswordFields.current && isKeyboardVisible) {
+      if (!isSwitchingPasswordFields.current) {
+        // Volta para o centro quando sai dos campos de senha
         centerScroll();
       }
     }, 150);
@@ -271,6 +257,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   const handleOtherFieldFocus = (): void => {
     setIsPasswordFocused(false);
+    // Mantém a posição central para outros campos
     centerScroll();
   };
 
@@ -317,7 +304,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     }
 
     if (dataError || !validateAge(form.dataNascimento)) {
-      Alert.alert('Erro', 'Data de nascimento inválida ou você deve ter pelo menos 16 anos');
+      Alert.alert('Erro', 'Data de nascimento inválida ou você deve ter pelo menos 18 anos');
       return;
     }
 
@@ -361,17 +348,21 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <ScrollView 
           ref={scrollViewRef}
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            isKeyboardVisible && styles.scrollContainerKeyboardVisible
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          scrollEnabled={false}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
         >
         <View style={styles.header}>
           <Image source={logoSoccerQuiz} style={styles.logo} resizeMode="contain" />
@@ -547,6 +538,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 50,
     paddingBottom: 150,
+  },
+  scrollContainerKeyboardVisible: {
+    justifyContent: 'flex-start',
+    paddingBottom: 250,
   },
   header: {
     alignItems: 'center',
