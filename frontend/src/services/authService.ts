@@ -100,6 +100,17 @@ class AuthService {
     }
     return null;
   }
+
+  async getCurrentUser(): Promise<User> {
+    // Usa apenas os dados salvos localmente (sem modificar o backend)
+    const savedUser = await this.getUser();
+    if (savedUser) {
+      return savedUser;
+    }
+    
+    // Se não houver dados salvos, lança erro
+    throw new Error('Dados do usuário não encontrados. Faça o registro primeiro.');
+  }
 }
 
 export default new AuthService();

@@ -36,7 +36,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
     try {
       await login({ email: email.trim().toLowerCase(), password });
+      // Se o login for bem-sucedido, o App.tsx automaticamente redireciona
+      // para a HomeScreen através da mudança de isAuthenticated
     } catch (error) {
+      // Em caso de erro, o Alert já é mostrado no AuthContext
+      // O usuário permanece na mesma tela de login
+      // Não fazemos nada aqui, apenas capturamos o erro para não quebrar
     } finally {
       setIsLoading(false);
     }

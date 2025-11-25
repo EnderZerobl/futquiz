@@ -328,7 +328,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       
       Alert.alert(
         'Cadastro Efetuado com Sucesso',
-        'Seu cadastro foi realizado com sucesso!',
+        'Seu cadastro foi realizado com sucesso! Faça login para continuar.',
         [
           {
             text: 'OK',

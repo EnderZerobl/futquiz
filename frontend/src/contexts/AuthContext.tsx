@@ -37,12 +37,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = async () => {
     try {
       const authenticated = await authService.isAuthenticated();
-      if (authenticated) {
-        const savedUser = await authService.getUser();
-        setUser(savedUser);
-        setIsAuthenticated(true);
+      // Se houver token válido, autentica (dados mockados na HomeScreen)
+      setIsAuthenticated(authenticated);
+      if (!authenticated) {
+        setUser(null);
       }
     } catch (error) {
+      // Em caso de erro, não autentica
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +54,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
+      // Limpa estado anterior em caso de erro
+      setIsAuthenticated(false);
+      setUser(null);
+      
       await authService.login(credentials);
+      
+      // Após login bem-sucedido, autentica o usuário
+      // Os dados na HomeScreen são mockados, então não precisamos buscar dados do usuário
       setIsAuthenticated(true);
     } catch (error: any) {
+      // Garante que não está autenticado em caso de erro
+      setIsAuthenticated(false);
+      setUser(null);
       const errorMsg = error?.message || 'Erro ao fazer login';
       Alert.alert('Erro no Login', errorMsg);
       throw error;
@@ -65,7 +78,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (data: RegisterData) => {
     try {
       setIsLoading(true);
-      await authService.register(data);
+      const userData = await authService.register(data);
+      // Salva os dados do usuário após o registro
+      await authService.saveUser(userData);
+      setUser(userData);
+      // Após o registro, o usuário precisa fazer login para obter o token
+      // Por enquanto, apenas salvamos os dados. O usuário será redirecionado para login
+      // Se quiser autenticar automaticamente após registro, seria necessário
+      // fazer login automaticamente aqui
     } catch (error: any) {
       const errorMsg = error?.message || 'Erro ao cadastrar usuário';
       Alert.alert('Erro no Cadastro', errorMsg);

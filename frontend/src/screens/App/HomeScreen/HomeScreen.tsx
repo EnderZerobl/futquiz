@@ -13,6 +13,10 @@ export default function HomeScreen() {
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
+  // Dados mockados do usuário
+  const fullName = "User";
+  const emailUpper = "USER@GMAIL.COM";
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -24,8 +28,8 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.headerHello}>OLÁ,</Text>
-            <Text style={styles.headerName}>Laura Santos</Text>
-            <Text style={styles.headerEmail}>LAURASANTOSS2@GMAIL.COM</Text>
+            <Text style={styles.headerName}>{fullName || 'Usuário'}</Text>
+            <Text style={styles.headerEmail}>{emailUpper || ''}</Text>
           </View>
 
           <Ionicons name="person-circle" size={45} color="#fff" />
