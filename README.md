@@ -1,6 +1,6 @@
 ⚽ FutQuiz - Aplicação Gamificada de Quizes
 
-Este repositório contém o código completo para a aplicação FutQuiz, desenvolvida como MVP (Mínimo Produto Viável) para a disciplina de Engenharia de Software. O projeto segue uma arquitetura baseada em serviços de domínio (FastAPI) e um Frontend móvel (React Native).
+Este repositório contém o código completo para a aplicação FutQuiz, desenvolvida com foco rigoroso em SOLID e arquitetura baseada em serviços de domínio (FastAPI/React Native).
 
 💡 Status e Requisitos Implementados
 
@@ -46,7 +46,7 @@ O terminal exibirá o QR Code do Expo. Use o aplicativo Expo Go no seu celular p
 
     Importante: Para sair do terminal de interação sem parar o contêiner, pressione Ctrl+P seguido de Ctrl+Q (NÃO use Ctrl+C).
 
-🌐 Testes e Documentação da API
+🌐 Testes e Arquitetura
 
 1. Documentação Interativa (Swagger UI)
 
@@ -54,16 +54,9 @@ O Backend FastAPI gera automaticamente a documentação interativa para teste de
 
 Acesse em seu navegador: http://127.0.0.1:8000/docs
 
-2. Rotas Chave e Autorização
+2. Design e Estrutura
 
-Domínio	Método	Endpoint	Restrição
-Autenticação	POST	/auth/register	Público
-Autenticação	POST	/auth/login	Público
-Autenticação	POST	/auth/logout	Protegido (JWT)
-Questões	POST	/perguntas/create	ADM/JWT Requerido
+O design visual do aplicativo móvel, que serve de base para a implementação do Frontend, está disponível no Figma. A estrutura de Microsserviços e a aplicação dos princípios SOLID (SRP, DIP) no Backend são comprovadas pela suíte de testes unitários.
 
-3. Design de UI
-
-O layout visual do aplicativo móvel, que serve de base para a implementação do Frontend, está disponível no Figma:
-
+Link do Design: https://www.figma.com/design/bf74THL929V4aUCebkVzXZ/App.-Eng-Software?node-id=0-1&t=pr5BtIwzgbrJ7b2X-1
 Link do Design: https://www.figma.com/design/bf74THL929V4aUCebkVzXZ/App.-Eng-Software?node-id=0-1&t=pr5BtIwzgbrJ7b2X-1
