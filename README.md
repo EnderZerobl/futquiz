@@ -30,7 +30,7 @@ O projeto utiliza **Docker** para garantir um ambiente de desenvolvimento consis
 
 Execute os comandos a seguir na pasta raiz do repositório para construir as imagens e iniciar os contêineres:
 
-```bash
+```Bash
 # 1. Executa o build das imagens e inicia os containers em segundo plano
 make build
 
@@ -42,23 +42,21 @@ O Backend FastAPI será iniciado no contêiner e estará acessível pelo Fronten
 2. Interagindo com o Frontend (Expo)
 
 O Frontend (React Native) roda em um contêiner Docker com o Expo/Metro Bundler. Para escanear o QR code e rodar o app no seu dispositivo físico ou simulador, você precisa interagir com o terminal do Frontend:
-Bash
+
+```Bash
 
 # Entra no terminal do container do Frontend para acessar o Metro Bundler
 make attach-frontend
+```
 
 O terminal exibirá o QR Code do Expo. Use o aplicativo Expo Go no seu celular para escanear o código e iniciar o aplicativo.
 
     Importante: Para sair do terminal de interação sem parar o contêiner, pressione Ctrl+P seguido de Ctrl+Q (NÃO use Ctrl+C).
 
-🌐 Testes e Arquitetura
+🌐 Testes 
 
 1. Documentação Interativa (Swagger UI)
 
 O Backend FastAPI gera automaticamente a documentação interativa para teste de todos os endpoints:
 
 Acesse em seu navegador: http://127.0.0.1:8000/docs
-
-2. Design e Estrutura
-
-A estrutura de Microsserviços e a aplicação dos princípios SOLID (SRP, DIP) no Backend são comprovadas pela suíte de testes unitários.
