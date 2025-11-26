@@ -11,6 +11,16 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     zIndex: 20,
   },
+  closeButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 21,
+  },
+  closeIcon: {
+    width: 26,
+    height: 26,
+  },
   sidebarTitle: {
     color: "#fff",
     fontSize: 20,

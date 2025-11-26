@@ -13,18 +13,14 @@ export default function HomeScreen() {
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
 
-  // Dados mockados do usuário
   const fullName = "User";
   const emailUpper = "USER@GMAIL.COM";
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        
-        {/* Sidebar */}
-        <FilterSidebar visible={filterOpen} />
+        <FilterSidebar visible={filterOpen} onClose={() => setFilterOpen(false)} />
 
-        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.headerHello}>OLÁ,</Text>
@@ -35,7 +31,6 @@ export default function HomeScreen() {
           <Ionicons name="person-circle" size={45} color="#fff" />
         </View>
 
-        {/* Filtro */}
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setFilterOpen(!filterOpen)}
@@ -44,12 +39,11 @@ export default function HomeScreen() {
           <Text style={styles.filterLabel}>Filtrar</Text>
         </TouchableOpacity>
 
-        {/* Lista de cards */}
         <FlatList
           data={quizListMock}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
           renderItem={({ item }) => (
             <QuizCard
               item={item}
@@ -62,7 +56,6 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Footer */}
       <FooterNavigation />
     </View>
   )

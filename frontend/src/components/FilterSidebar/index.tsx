@@ -1,13 +1,21 @@
 import React from "react";
-import { View, Text, Animated } from "react-native";
+import { View, Text, Animated, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "./styles";
+import arrowLeftCircle from "../../../assets/icons/Arrow left-circle.png";
 
-const FilterSidebar = ({ visible }: { visible: boolean }) => {
+const FilterSidebar = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
   const left = visible ? 0 : -200;
 
   return (
     <Animated.View style={[styles.sidebar, { left }]}>
+      <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+        <Image 
+          source={arrowLeftCircle} 
+          style={styles.closeIcon}
+        />
+      </TouchableOpacity>
+      
       <Text style={styles.sidebarTitle}>Filtrar:</Text>
 
       <View style={styles.filterItem}>
