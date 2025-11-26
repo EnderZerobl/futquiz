@@ -5,3 +5,7 @@ export type AuthStackParamList = {
   RegisterScreen: undefined; 
   ForgotPassword: undefined; 
 };
+
+export type AppStackParamList = {
+  HomeScreen: undefined;
+};

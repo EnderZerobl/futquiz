@@ -36,7 +36,7 @@ Acesse a documentação interativa (Swagger UI) para testar as rotas: http://127
 
 Rotas de Autenticação (REQ 01 & REQ 09)
 
-POST	/auth/register. REQ 09: Cria um novo usuário. Requer 8 caracteres na senha e validação de 16 anos de idade.
+POST	/auth/register. REQ 09: Cria um novo usuário. Requer 8 caracteres na senha e validação de 18 anos de idade.
 POST	/auth/login. REQ 01: Autentica o usuário com email e senha, retornando o token JWT.
 
 Rotas de Questões (REQ 03 & REQ 04)

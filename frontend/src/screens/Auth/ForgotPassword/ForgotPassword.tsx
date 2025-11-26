@@ -15,11 +15,10 @@ type ForgotPasswordProps = StackScreenProps<AuthStackParamList, 'ForgotPassword'
 
 const GREEN_COLOR = '#1EAD47';
 
-const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({ navigation }) => {
+const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = () => {
   const [email, setEmail] = useState<string>('');
 
   const handleRecover = () => {
-    console.log('Solicitando recuperação para:', email);
   };
 
   return (

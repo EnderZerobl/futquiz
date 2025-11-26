@@ -29,7 +29,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   };
 
   const handleGoogleLogin = () => {
-    console.log('Botão Entrar com a Google clicado. Funcionalidade pendente.');
   };
 
   return (
